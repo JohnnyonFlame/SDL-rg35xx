@@ -12,8 +12,6 @@
 #define MALI_GLES_GetAttribute SDL_EGL_GetAttribute
 #define MALI_GLES_GetProcAddress SDL_EGL_GetProcAddress
 #define MALI_GLES_UnloadLibrary SDL_EGL_UnloadLibrary
-#define MALI_GLES_SetSwapInterval SDL_EGL_SetSwapInterval
-#define MALI_GLES_GetSwapInterval SDL_EGL_GetSwapInterval
 #define MALI_GLES_DeleteContext SDL_EGL_DeleteContext
 
 extern int MALI_GLES_LoadLibrary(_THIS, const char *path);
