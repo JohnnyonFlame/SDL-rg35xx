@@ -118,13 +118,13 @@ MALI_VideoInit(_THIS)
 
     /* Enable double buffering */
     vinfo.yres_virtual = vinfo.yres * 2;
-    if (ioctl(data->fb, FBIOPUT_VSCREENINFO, vinfo) == -1) {
+    if (ioctl(data->fb, FBIOPUT_VSCREENINFO, &vinfo) == -1) {
 	    printf("mali-fbdev: Error setting VSCREENINFO\n");
     }
 
     data->native_display.width = vinfo.xres;
     data->native_display.height = vinfo.yres;
-    data->vsync_en = 1;
+    data->vsync_en = -1;
 
     SDL_zero(current_mode);
     current_mode.w = vinfo.xres;
@@ -143,6 +143,7 @@ MALI_VideoInit(_THIS)
     display.driverdata = data;
 
     SDL_AddVideoDisplay(&display, SDL_FALSE);
+    MALI_GLES_SetSwapInterval(_this, 1); // default is vsync on.
 
 #ifdef SDL_INPUT_LINUXEV
     if (SDL_EVDEV_Init() < 0) {
