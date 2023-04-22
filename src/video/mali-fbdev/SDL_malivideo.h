@@ -10,21 +10,42 @@
 #include <linux/vt.h>
 #include <linux/fb.h>
 #include <sys/types.h>
+#include <linux/kd.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 
+typedef struct fbdev_window
+{
+    unsigned short width;
+    unsigned short height;
+} fbdev_window;
+
+
 typedef struct SDL_DisplayData
 {
     struct fbdev_window native_display;
+    int fb;
+    int vsync_en;
+    int mode_prev;
 } SDL_DisplayData;
 
 typedef struct SDL_WindowData
 {
     EGLSurface egl_surface;
 } SDL_WindowData;
+
+struct owlfb_sync_info {
+    __u8 enabled;
+    __u8 disp_id;
+    __u16 reserved2;
+};
+
+#define OWL_IOW(num, dtype)    _IOW('O', num, dtype)
+#define OWLFB_WAITFORVSYNC            OWL_IOW(57,long long)
+#define OWLFB_VSYNC_EVENT_EN          OWL_IOW(67, struct owlfb_sync_info)
 
 /****************************************************************************/
 /* SDL_VideoDevice functions declaration                                    */
@@ -44,6 +65,8 @@ void MALI_HideWindow(_THIS, SDL_Window * window);
 void MALI_DestroyWindow(_THIS, SDL_Window * window);
 
 /* Window manager function */
+int MALI_GLES_SetSwapInterval(_THIS, int interval);
+int MALI_GLES_GetSwapInterval(_THIS);
 SDL_bool MALI_GetWindowWMInfo(_THIS, SDL_Window * window,
                              struct SDL_SysWMinfo *info);
 

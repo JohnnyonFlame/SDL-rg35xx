@@ -88,8 +88,8 @@ VideoBootStrap MALI_bootstrap = {
 int
 MALI_VideoInit(_THIS)
 {
+    int ttyfd;
     struct fb_var_screeninfo vinfo;
-    int fd;
     SDL_VideoDisplay display;
     SDL_DisplayMode current_mode;
     SDL_DisplayData *data;
@@ -99,27 +99,32 @@ MALI_VideoInit(_THIS)
         return SDL_OutOfMemory();
     }
 
-    fd = open("/dev/fb0", O_RDWR, 0);
-    if (fd < 0) {
+    data->fb = open("/dev/fb0", O_RDWR, 0);
+    if (data->fb < 0) {
         return SDL_SetError("mali-fbdev: Could not open framebuffer device");
     }
 
-    if (ioctl(fd, FBIOGET_VSCREENINFO, &vinfo) < 0) {
+    if (ioctl(data->fb, FBIOGET_VSCREENINFO, &vinfo) < 0) {
         MALI_VideoQuit(_this);
         return SDL_SetError("mali-fbdev: Could not get framebuffer information");
     }
-    /* Enable triple buffering */
-    /*
-    vinfo.yres_virtual = vinfo.yres * 3;
-    if (ioctl(fd, FBIOPUT_VSCREENINFO, vinfo) == -1) {
-	printf("mali-fbdev: Error setting VSCREENINFO\n");
+
+    ttyfd = open("/dev/tty0", O_RDWR, 0);
+    if (ttyfd >= 0) {
+        ioctl(ttyfd, KDGETMODE, &data->mode_prev);
+        ioctl(ttyfd, KDSETMODE, KD_GRAPHICS);
+        close(ttyfd);
     }
-    */
-    close(fd);
-    system("setterm -cursor off");
+
+    /* Enable double buffering */
+    vinfo.yres_virtual = vinfo.yres * 2;
+    if (ioctl(data->fb, FBIOPUT_VSCREENINFO, vinfo) == -1) {
+	    printf("mali-fbdev: Error setting VSCREENINFO\n");
+    }
 
     data->native_display.width = vinfo.xres;
     data->native_display.height = vinfo.yres;
+    data->vsync_en = 1;
 
     SDL_zero(current_mode);
     current_mode.w = vinfo.xres;
@@ -151,12 +156,21 @@ MALI_VideoInit(_THIS)
 void
 MALI_VideoQuit(_THIS)
 {
+    SDL_DisplayData *displaydata;
+    int fd;
+
+    displaydata = SDL_GetDisplayDriverData(0);
+
     /* Clear the framebuffer and ser cursor on again */
-    int fd = open("/dev/tty", O_RDWR);
+    fd = open("/dev/tty0", O_RDWR);
+    ioctl(fd, KDSETMODE, displaydata->mode_prev);
     ioctl(fd, VT_ACTIVATE, 5);
     ioctl(fd, VT_ACTIVATE, 1);
     close(fd);
-    system("setterm -cursor on");
+    if (displaydata->fb >= 0) {
+        close(displaydata->fb);
+        displaydata->fb = -1;
+    }
 
 #ifdef SDL_INPUT_LINUXEV
     SDL_EVDEV_Quit();
@@ -203,7 +217,12 @@ MALI_CreateWindow(_THIS, SDL_Window * window)
             return -1;
         }
     }
+
     windowdata->egl_surface = SDL_EGL_CreateSurface(_this, (NativeWindowType) &displaydata->native_display);
+    if (windowdata->egl_surface == EGL_NO_SURFACE) {
+        // Try again if the driver refuses our native_display as being fbdev_window
+        windowdata->egl_surface = SDL_EGL_CreateSurface(_this, (NativeWindowType)NULL);
+    }
 
     if (windowdata->egl_surface == EGL_NO_SURFACE) {
         MALI_VideoQuit(_this);
@@ -225,9 +244,21 @@ void
 MALI_DestroyWindow(_THIS, SDL_Window * window)
 {
     SDL_WindowData *data;
+    SDL_DisplayData *displaydata;
+
+    displaydata = SDL_GetDisplayDriverData(0);
 
     data = window->driverdata;
+    if (displaydata) {
+        if (displaydata->fb >= 0) {
+            close(displaydata->fb);
+            displaydata->fb  = -1;
+        }
+    }
+
     if (data) {
+
+
         if (data->egl_surface != EGL_NO_SURFACE) {
             SDL_EGL_DestroySurface(_this, data->egl_surface);
             data->egl_surface = EGL_NO_SURFACE;
@@ -260,6 +291,43 @@ MALI_ShowWindow(_THIS, SDL_Window * window)
 void
 MALI_HideWindow(_THIS, SDL_Window * window)
 {
+}
+
+int
+MALI_GLES_SetSwapInterval(_THIS, int interval)
+{
+    SDL_DisplayData *displaydata;
+
+    displaydata = SDL_GetDisplayDriverData(0);
+
+    interval = interval > 0;
+    if (displaydata) {
+        if (displaydata->vsync_en != interval) {
+            struct owlfb_sync_info sinfo;
+            sinfo.enabled = interval;
+            if (ioctl(displaydata->fb, OWLFB_VSYNC_EVENT_EN, &sinfo)) {
+                printf("OWLFB_VSYNC_EVENT_EN failed\n");
+            }
+        }
+
+        SDL_EGL_SetSwapInterval(_this, interval);
+        displaydata->vsync_en = interval;
+    }
+
+    return 0;
+}
+
+int
+MALI_GLES_GetSwapInterval(_THIS)
+{
+    SDL_DisplayData *displaydata;
+    displaydata = SDL_GetDisplayDriverData(0);
+
+    if (displaydata) {
+        return displaydata->vsync_en;
+    }
+
+    return 1;
 }
 
 /*****************************************************************************/
