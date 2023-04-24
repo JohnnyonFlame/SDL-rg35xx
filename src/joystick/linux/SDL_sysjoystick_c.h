@@ -53,6 +53,7 @@ struct joystick_hwdata
     /* Support for the Linux 2.4 unified input interface */
     Uint8 key_map[KEY_MAX];
     Uint8 abs_map[ABS_MAX];
+    Uint8 hat_map[ABS_MAX];
     SDL_bool has_key[KEY_MAX];
     SDL_bool has_abs[ABS_MAX];
 

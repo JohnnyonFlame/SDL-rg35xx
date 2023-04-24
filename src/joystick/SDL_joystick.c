@@ -2898,6 +2898,27 @@ SDL_JoystickGUID SDL_JoystickGetGUIDFromString(const char *pchGUID)
     return SDL_GUIDFromString(pchGUID);
 }
 
+const char *
+SDL_JoystickDevicePathById(int device_instance_id)
+{
+  return SDL_SYS_JoystickDevicePathById( device_instance_id );
+}
+
+int SDL_JoystickButtonEventCodeById(int device_instance_id, int button)
+{
+  return SDL_SYS_JoystickButtonEventCodeById( device_instance_id, button );
+}
+
+int SDL_JoystickAxisEventCodeById(int device_instance_id, int axis)
+{
+  return SDL_SYS_JoystickAxisEventCodeById( device_instance_id, axis );
+}
+
+int SDL_JoystickHatEventCodeById(int device_instance_id, int hat)
+{
+  return SDL_SYS_JoystickHatEventCodeById( device_instance_id, hat );
+}
+
 /* update the power level for this joystick */
 void SDL_PrivateJoystickBatteryLevel(SDL_Joystick *joystick, SDL_JoystickPowerLevel ePowerLevel)
 {

@@ -957,6 +957,16 @@ ConfigJoystick(SDL_Joystick *joystick, int fd)
     SDL_bool use_deadzones = SDL_GetHintBoolean(SDL_HINT_LINUX_JOYSTICK_DEADZONES, SDL_FALSE);
     SDL_bool use_hat_deadzones = SDL_GetHintBoolean(SDL_HINT_LINUX_HAT_DEADZONES, SDL_TRUE);
 
+    for(i=0; i<KEY_MAX; i++) {
+      joystick->hwdata->key_map[i] = -1;
+    }
+    for(i=0; i<ABS_MAX; i++) {
+      joystick->hwdata->abs_map[i] = -1;
+    }
+    for(i=0; i<ABS_MAX; i++) {
+      joystick->hwdata->hat_map[i] = -1;
+    }
+
     /* See if this device uses the new unified event API */
     if ((ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keybit)), keybit) >= 0) &&
         (ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absbit)), absbit) >= 0) &&
@@ -2089,6 +2099,56 @@ SDL_JoystickDriver SDL_LINUX_JoystickDriver =
     LINUX_JoystickQuit,
     LINUX_JoystickGetGamepadMapping
 };
+
+const char *
+SDL_SYS_JoystickDevicePathById(int device_instance_id)
+{
+  SDL_joylist_item* joystick = JoystickByDevIndex(SDL_JoystickGetDeviceIndexFromInstanceID(device_instance_id));
+  if(joystick == NULL) return "";
+  return joystick->hwdata->fname;
+}
+
+int SDL_SYS_JoystickButtonEventCodeById(int device_instance_id, int button)
+{
+  int i;
+  SDL_joylist_item* joystick = JoystickByDevIndex(SDL_JoystickGetDeviceIndexFromInstanceID(device_instance_id));
+  if(joystick == NULL) return -1;
+
+  for(i=0; i<KEY_MAX; i++) {
+    if(((int)joystick->hwdata->key_map[i]) == button) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+int SDL_SYS_JoystickAxisEventCodeById(int device_instance_id, int axis)
+{
+  int i;
+  SDL_joylist_item* joystick = JoystickByDevIndex(SDL_JoystickGetDeviceIndexFromInstanceID(device_instance_id));
+  if(joystick == NULL) return -1;
+
+  for(i=0; i<ABS_MAX; i++) {
+    if(((int)joystick->hwdata->abs_map[i]) == axis) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+int SDL_SYS_JoystickHatEventCodeById(int device_instance_id, int hat)
+{
+  int i;
+  SDL_joylist_item* joystick = JoystickByDevIndex(SDL_JoystickGetDeviceIndexFromInstanceID(device_instance_id));
+  if(joystick == NULL) return -1;
+
+  for(i=0; i<ABS_MAX; i++) {
+    if(((int)joystick->hwdata->hat_map[i]) == hat) {
+      return i;
+    }
+  }
+  return -1;
+}
 
 #endif /* SDL_JOYSTICK_LINUX */
 

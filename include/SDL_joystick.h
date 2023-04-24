@@ -421,6 +421,11 @@ extern DECLSPEC int SDLCALL SDL_JoystickDetachVirtual(int device_index);
  */
 extern DECLSPEC SDL_bool SDLCALL SDL_JoystickIsVirtual(int device_index);
 
+extern DECLSPEC const char *SDLCALL SDL_JoystickDevicePathById(int device_instance_id);
+extern DECLSPEC int SDLCALL SDL_JoystickButtonEventCodeById(int device_instance_id, int button);
+extern DECLSPEC int SDLCALL SDL_JoystickAxisEventCodeById(int device_instance_id, int axis);
+extern DECLSPEC int SDLCALL SDL_JoystickHatEventCodeById(int device_instance_id, int hat);
+
 /**
  * Set values on an opened, virtual-joystick's axis.
  *

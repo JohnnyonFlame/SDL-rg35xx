@@ -867,3 +867,7 @@
 ++'_SDL_SensorGetDataWithTimestamp'.'SDL2.dll'.'SDL_SensorGetDataWithTimestamp'
 ++'_SDL_ResetHints'.'SDL2.dll'.'SDL_ResetHints'
 ++'_SDL_strcasestr'.'SDL2.dll'.'SDL_strcasestr'
+++'_SDL_JoystickDevicePathById'.'SDL2.dll'.'SDL_JoystickDevicePathById'
+++'_SDL_JoystickButtonEventCodeById'.'SDL2.dll'.'SDL_JoystickButtonEventCodeById'
+++'_SDL_JoystickAxisEventCodeById'.'SDL2.dll'.'SDL_JoystickAxisEventCodeById'
+++'_SDL_JoystickHatEventCodeById'.'SDL2.dll'.'SDL_JoystickHatEventCodeById'

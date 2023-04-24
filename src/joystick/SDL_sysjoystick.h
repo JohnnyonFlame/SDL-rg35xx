@@ -250,6 +250,11 @@ extern SDL_JoystickDriver SDL_N3DS_JoystickDriver;
 }
 #endif
 
+extern const char *SDL_SYS_JoystickDevicePathById(int device_instance_id);
+extern int SDL_SYS_JoystickButtonEventCodeById(int device_instance_id, int button);
+extern int SDL_SYS_JoystickAxisEventCodeById(int device_instance_id, int axis);
+extern int SDL_SYS_JoystickHatEventCodeById(int device_instance_id, int hat);
+
 #endif /* SDL_sysjoystick_h_ */
 
 /* vi: set ts=4 sw=4 expandtab: */
